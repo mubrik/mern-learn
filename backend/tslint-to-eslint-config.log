@@ -1,0 +1,11 @@
+2 ESLint rules behave differently from their TSLint counterparts:
+  * @typescript-eslint/no-unused-expressions:
+    - The TSLint optional config "allow-new" is the default ESLint behavior and will no longer be ignored.
+  * no-underscore-dangle:
+    - Leading or trailing underscores (_) on identifiers will now be forbidden.
+
+1 rule is not known by tslint-to-eslint-config to have an ESLint equivalent:
+  * tslint-to-eslint-config does not know the ESLint equivalent for TSLint's "use-named-parameter".
+
+  * no-function-expression
+
