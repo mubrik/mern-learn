@@ -1,6 +1,6 @@
 /* base types */
 import express from 'express';
-
+import mongoose from "mongoose";
 /* just a base controller to use as base type */
 interface IController {
   path: string;

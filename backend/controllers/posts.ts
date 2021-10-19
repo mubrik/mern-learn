@@ -3,9 +3,13 @@ import * as express from 'express';
 import IController, {IPost} from "./base";
 // model
 import postModel from '../models/postModel';
+// error handler 
+import { PostNotFoundException, MongooseCastException } from '../exceptions/HttpException';
+import {body, validationResult} from "express-validator";
 
 /* controller instance, extends base controller */
 class PostsController implements IController {
+
   public path = '/posts';
   public router = express.Router();
  
@@ -17,7 +21,7 @@ class PostsController implements IController {
   public intializeRoutes() {
     this.router.get(this.path, this.getAllPosts);
     this.router.get(`${this.path}/:id`, this.getPostById);
-    this.router.post(this.path, this.createAPost);
+    this.router.post(this.path, body("title").exists(), this.createAPost);
     this.router.patch(`${this.path}/:id`, this.modifyPost);
     this.router.delete(`${this.path}/:id`, this.deletePost);
   };
@@ -32,6 +36,11 @@ class PostsController implements IController {
   };
  
   public createAPost = (request: express.Request, response: express.Response) => {
+    // validate request
+    const errors = validationResult(request);
+    if (!errors.isEmpty()) {
+      return response.json({error: "Title must be present"});
+    }
     // get body data
     const postData: IPost = request.body;
     // create post using model
@@ -43,7 +52,7 @@ class PostsController implements IController {
       });
   };
 
-  private getPostById = (request: express.Request, response: express.Response) => {
+  private getPostById = (request: express.Request, response: express.Response, next: express.NextFunction) => {
     // get id from query string parameter
     const id = request.params.id;
     // find post by id
@@ -52,12 +61,16 @@ class PostsController implements IController {
         if (post) {
           response.send(post);
         } else {
-          response.status(404).send({ error: 'Post not found' });
+          next(new PostNotFoundException(id));
         }
+      })
+      .catch(err => {
+        console.log(err);
+        next(new MongooseCastException(err));
       });
   };
  
-  private modifyPost = (request: express.Request, response: express.Response) => {
+  private modifyPost = (request: express.Request, response: express.Response, next: express.NextFunction) => {
     // get id from query string parameter
     const id = request.params.id;
     // updated post data
@@ -65,7 +78,14 @@ class PostsController implements IController {
     // find and update
     postModel.findByIdAndUpdate(id, postData, { new: true })
       .then((post) => {
-        response.send(post);
+        if (post) {
+          response.send(post);
+        } else {
+          next(new PostNotFoundException(id));
+        }
+      })
+      .catch(err => {
+        next(new MongooseCastException(err));
       });
   };
 
@@ -80,7 +100,7 @@ class PostsController implements IController {
       });
   };
  
-  private deletePost = (request: express.Request, response: express.Response) => {
+  private deletePost = (request: express.Request, response: express.Response, next: express.NextFunction) => {
     // get id from query string parameter
     const id = request.params.id;
     // find and delete
@@ -89,8 +109,11 @@ class PostsController implements IController {
         if (successResponse) {
           response.sendStatus(200);
         } else {
-          response.sendStatus(404);
+          next(new PostNotFoundException(id));
         }
+      })
+      .catch(err => {
+        next(new MongooseCastException(err));
       });
   };
 }

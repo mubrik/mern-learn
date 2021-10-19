@@ -1,8 +1,9 @@
 import mongoose from "mongoose";
 import IPost from "../controllers/posts";
+import {Schema} from "express-validator";
 
 // create shema
-const postSchema = new mongoose.Schema({
+export const postSchema = new mongoose.Schema({
   title: String,
   content: String,
   author: String,
@@ -17,6 +18,7 @@ const postSchema = new mongoose.Schema({
     default: new Date(),
   }
 });
+
 // create model
 const postModel = mongoose.model<mongoose.Document & IPost>("Post", postSchema);
 

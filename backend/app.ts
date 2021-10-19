@@ -3,7 +3,8 @@ import express from 'express';
 import mongoose from 'mongoose';
 // middlewares
 import bodyParser from 'body-parser';
-import loggerMiddleware from "./middlewares/logger";
+import loggerMiddleware from "./middlewares/loggerMiddleware";
+import errorMiddleware from './middlewares/errorMiddleware';
 import cors from "cors";
 // controller for types
 import IController from './controllers/base';
@@ -22,6 +23,7 @@ class App {
     this.connectToTheDatabase();
     this.initializeMiddlewares();
     this.initializeControllers(controllers);
+    this.initializeErrorMiddleware();
   };
   /* initialize express to listen */
   public listen() {
@@ -31,9 +33,13 @@ class App {
   };
   /* middlewares */
   private initializeMiddlewares() {
-    this.app.use(bodyParser.json());
     this.app.use(loggerMiddleware);
+    this.app.use(bodyParser.json());
     this.app.use(cors());
+  };
+  /* initialized last */
+  private initializeErrorMiddleware() {
+    this.app.use(errorMiddleware);
   };
   /* array of controllers to initialize to app */
   private initializeControllers(controllers: IController[]) {
